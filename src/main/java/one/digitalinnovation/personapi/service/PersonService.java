@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import one.digitalinnovation.personapi.dto.MessageResponseDTO;
 import one.digitalinnovation.personapi.dto.request.PersonDTO;
@@ -30,10 +34,8 @@ public class PersonService {
 		Person personToSave = personMapper.toModel(personDTO);
 		
 		Person savedPerson = personRepository.save(personToSave);
-		return MessageResponseDTO
-				.builder()
-				.message("Create person with ID: " + savedPerson.getId())
-				.build();
+		String s = "Created person with ID ";
+		return createMessageResponse(savedPerson.getId(), s);
 	}
 
 	public List<PersonDTO> listAll() {
@@ -49,11 +51,29 @@ public class PersonService {
 		return personMapper.toDTO(person);
 	}
 	
+	public MessageResponseDTO updateById(Long id, PersonDTO personDTO) throws PersonNotFoundException{
+		verifyIfExists(id);
+		
+		Person personToUpdate = personMapper.toModel(personDTO);
+		
+		Person updatedPerson = personRepository.save(personToUpdate);
+		String s = "Updated person with ID ";
+		return createMessageResponse(updatedPerson.getId(), s);
+	}
+
 	public void delete(Long id) throws PersonNotFoundException {
 		verifyIfExists(id);
 		
 		personRepository.deleteById(id);
 	}
+	
+	private MessageResponseDTO createMessageResponse(Long id, String s) {
+		return MessageResponseDTO
+				.builder()
+				.message(s + id)
+				.build();
+	}
+
 	private Person verifyIfExists(Long id) throws PersonNotFoundException {
 		return personRepository.findById(id)
 				.orElseThrow(() -> new PersonNotFoundException(id));
